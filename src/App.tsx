@@ -4,7 +4,7 @@
  */
 
 import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Footer } from './components/Footer';
 import { Navigation } from './components/Navigation';
@@ -34,12 +34,19 @@ const NotFoundPage = React.lazy(() =>
 
 function ScrollToTopOnRouteChange() {
   const { pathname, hash } = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Support hash-based paths like /#/check or /#/join by converting to clean routes
+    if (hash && hash.startsWith('#/')) {
+      const targetRoute = hash.slice(1);
+      navigate(targetRoute, { replace: true });
+      return;
+    }
     if (!hash) {
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     }
-  }, [pathname, hash]);
+  }, [pathname, hash, navigate]);
 
   return null;
 }
