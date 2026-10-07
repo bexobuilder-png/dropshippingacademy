@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  CURRICULUM_TABS,
-  FAQ_ITEMS,
-  FEATURED_RESULTS,
+  getCurriculumTabs,
+  getFaqItems,
+  getFeaturedResults,
+  getTestimonials,
+  getToolCategories,
   PLACEHOLDER_CONTENT,
-  TESTIMONIALS,
-  TOOL_CATEGORIES,
 } from '../config/content';
-import { FounderProfile } from '../config/founders';
+import { FounderProfile, getLocalizedFounderStory } from '../config/founders';
+import { useLanguage } from '../context/LanguageContext';
 import {
   fetchFoundersList,
-  FounderStoryConfig,
-  loadFounderStoryConfig,
   loadLocalFounders,
 } from '../services/admin';
 import { saveHeroEmailPrefill } from '../services/waitlist';
@@ -32,15 +31,14 @@ import { ArrowDownCurvedIcon, ArrowRightSvgIcon } from '../components/svg/NavIco
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { lang, t } = useLanguage();
+
   const [heroEmail, setHeroEmail] = useState('');
   const [heroEmailError, setHeroEmailError] = useState('');
   const [showTeamBios, setShowTeamBios] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const [foundersList, setFoundersList] = useState<FounderProfile[]>(() =>
     loadLocalFounders()
-  );
-  const [founderStory, setFounderStory] = useState<FounderStoryConfig>(() =>
-    loadFounderStoryConfig()
   );
 
   useEffect(() => {
@@ -51,7 +49,6 @@ export const HomePage: React.FC = () => {
 
     const handleFoundersUpdated = () => {
       setFoundersList(loadLocalFounders());
-      setFounderStory(loadFounderStoryConfig());
     };
     window.addEventListener('founders-updated', handleFoundersUpdated);
     return () => {
@@ -60,7 +57,6 @@ export const HomePage: React.FC = () => {
     };
   }, []);
 
-  // Support hash scrolling when navigating back from /join, /terms, /privacy
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace('#', '');
@@ -75,7 +71,12 @@ export const HomePage: React.FC = () => {
     e.preventDefault();
     const trimmed = heroEmail.trim();
     if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setHeroEmailError('Please enter a valid email address to continue.');
+      setHeroEmailError(
+        t(
+          'অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা লিখুন।',
+          'Please enter a valid email address to continue.'
+        )
+      );
       return;
     }
     setHeroEmailError('');
@@ -84,6 +85,13 @@ export const HomePage: React.FC = () => {
     }
     navigate('/join');
   };
+
+  const toolCategories = getToolCategories(lang);
+  const featuredResults = getFeaturedResults(lang);
+  const curriculumTabs = getCurriculumTabs(lang);
+  const testimonials = getTestimonials(lang);
+  const faqItems = getFaqItems(lang);
+  const founderStory = getLocalizedFounderStory(lang);
 
   return (
     <main id="main-content" className="overflow-x-hidden">
@@ -105,35 +113,50 @@ export const HomePage: React.FC = () => {
             <div className="col-span-24 xl:col-start-3 xl:col-span-21">
               {/* Editorial Kicker */}
               <div className="flex flex-wrap items-center gap-2 text-[13px] font-bold text-[#813502] mb-5">
-                <span>Cohort-Based Operating System</span>
+                <span>
+                  {t('ব্যাচ-ভিত্তিক অপারেটিং সিস্টেম', 'Cohort-Based Operating System')}
+                </span>
                 <span aria-hidden="true">·</span>
-                <span>Unit Economics First</span>
+                <span>{t('প্রফিট ও ইউনিট ইকোনমিক্স', 'Unit Economics First')}</span>
                 <span aria-hidden="true">·</span>
-                <span>Waitlist Now Open</span>
+                <span>{t('ওয়েটলিস্ট চলছে', 'Waitlist Now Open')}</span>
               </div>
 
               {/* Giant H1 with Inline Circular Orange Box SVG Badge */}
-              <h1 className="specimen-h1 text-[#171412]">
-                The learning partner
-                <HeroInlineBoxBadge />
-                for ambitious dropshippers
-              </h1>
+              {lang === 'bn' ? (
+                <h1 className="specimen-h1 text-[#171412]">
+                  উচ্চাকাঙ্ক্ষী ড্রপশিপারদের
+                  <HeroInlineBoxBadge />
+                  শেখার বিশ্বস্ত সহযোগী
+                </h1>
+              ) : (
+                <h1 className="specimen-h1 text-[#171412]">
+                  The learning partner
+                  <HeroInlineBoxBadge />
+                  for ambitious dropshippers
+                </h1>
+              )}
             </div>
 
             {/* Subcopy + Compact Pill Email Form */}
             <div className="col-span-24 xl:col-start-3 xl:col-span-18 mt-2 md:mt-4 flex flex-col gap-6">
-              <p className="text-[18px] md:text-[22px] font-medium text-[#171412] leading-[1.25] max-w-[48ch]">
-                We teach beginners to find winning products, build stores, and scale
-                with ads, step by step.
+              <p className="text-[18px] md:text-[22px] font-medium text-[#171412] leading-[1.35] max-w-[52ch]">
+                {t(
+                  'আমরা নতুনদের একদম শুরু থেকে ধাপে ধাপে উইনিং প্রোডাক্ট খোঁজা, প্রফেশনাল স্টোর তৈরি এবং অ্যাডের মাধ্যমে সেলস স্কেল করা শেখাই।',
+                  'We teach beginners to find winning products, build stores, and scale with ads, step by step.'
+                )}
               </p>
 
               <form
                 onSubmit={handleHeroSubmit}
                 noValidate
-                className="w-full max-w-[520px]"
+                className="w-full max-w-[540px]"
               >
                 <label htmlFor="hero-waitlist-email" className="sr-only">
-                  Email address to join the waitlist
+                  {t(
+                    'ওয়েটলিস্টে যুক্ত হতে আপনার ইমেইল দিন',
+                    'Email address to join the waitlist'
+                  )}
                 </label>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 rounded-[28px] sm:rounded-[50px] bg-[#fff] border-2 border-[#171412] shadow-sm">
                   <input
@@ -146,7 +169,10 @@ export const HomePage: React.FC = () => {
                       setHeroEmail(e.target.value);
                       if (heroEmailError) setHeroEmailError('');
                     }}
-                    placeholder="Enter your email address..."
+                    placeholder={t(
+                      'আপনার ইমেইল ঠিকানা লিখুন...',
+                      'Enter your email address...'
+                    )}
                     aria-invalid={heroEmailError ? 'true' : 'false'}
                     aria-describedby={heroEmailError ? 'hero-email-error' : undefined}
                     className="flex-1 min-h-[44px] px-4 py-2 rounded-[50px] bg-transparent text-[#171412] text-[15px] font-medium placeholder:text-[#171412]/50 focus:outline-none"
@@ -156,7 +182,7 @@ export const HomePage: React.FC = () => {
                     variant="primary"
                     className="w-full sm:w-auto px-6"
                   >
-                    <span>Join waitlist</span>
+                    <span>{t('ওয়েটলিস্টে যুক্ত হোন', 'Join waitlist')}</span>
                     <ArrowRightSvgIcon className="w-4 h-4" />
                   </Button>
                 </div>
@@ -175,16 +201,19 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tool Categories Wordmark Cloud Row (Plain styled typography, no trademarked logos) */}
+          {/* Tool Categories Wordmark Cloud Row */}
           <div className="mt-14 md:mt-20 pt-8 hairline-t">
             <div className="text-[12px] font-bold text-[#813502] mb-4">
-              Built around the modern e-commerce stack
+              {t(
+                'আধুনিক ই-কমার্স ও পেইড মার্কেটিং টুলসের সমন্বয়ে তৈরি',
+                'Built around the modern e-commerce stack'
+              )}
             </div>
             <ul
               aria-label="Supported e-commerce platforms and ad networks"
               className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
             >
-              {TOOL_CATEGORIES.map((tool) => (
+              {toolCategories.map((tool) => (
                 <li
                   key={tool.id}
                   className="py-3 px-4 rounded-[12px] bg-[#f2f0e7] border border-[#171412]/12 flex flex-col justify-between"
@@ -209,21 +238,32 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col gap-4 mb-10 md:mb-14">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <h2 className="specimen-h2 text-[#171412]">
-                Featured <span className="text-[#8e827c]">results</span>
-              </h2>
+              {lang === 'bn' ? (
+                <h2 className="specimen-h2 text-[#171412]">
+                  নির্বাচিত <span className="text-[#8e827c]">ফলাফল</span>
+                </h2>
+              ) : (
+                <h2 className="specimen-h2 text-[#171412]">
+                  Featured <span className="text-[#8e827c]">results</span>
+                </h2>
+              )}
               <div className="mt-4 flex items-center gap-3 text-[#171412]">
                 <ArrowDownCurvedIcon className="w-7 h-7 text-[#ff7722] shrink-0" />
                 <p className="text-[16px] md:text-[18px] font-medium text-[#171412]">
-                  The operating benchmarks and unit economics every student builds toward.
+                  {t(
+                    'প্রতিটি শিক্ষার্থী যে অপারেটিং লক্ষ্যমাত্রা ও প্রফিট মার্জিন অর্জনের জন্য কাজ করে।',
+                    'The operating benchmarks and unit economics every student builds toward.'
+                  )}
                 </p>
               </div>
             </div>
 
             {PLACEHOLDER_CONTENT && (
-              <p className="text-[13px] text-[#813502] font-semibold max-w-[38ch]">
-                Note: Metrics and beta quotes below represent curriculum targets and
-                placeholder previews prior to Cohort 01 graduation.
+              <p className="text-[13px] text-[#813502] font-semibold max-w-[40ch]">
+                {t(
+                  'বিঃদ্রঃ নিচের পরিসংখ্যান ও বেটা রিভিউগুলো আমাদের কারিকুলামের লক্ষ্যমাত্রা ও নমুনা প্রিভিউ।',
+                  'Note: Metrics and beta quotes below represent curriculum targets and placeholder previews.'
+                )}
               </p>
             )}
           </div>
@@ -231,7 +271,7 @@ export const HomePage: React.FC = () => {
 
         {/* 24-Column Swiss Bento Grid */}
         <div className="grid-24 gap-4 md:gap-6">
-          {FEATURED_RESULTS.map((item) => (
+          {featuredResults.map((item) => (
             <BentoCard key={item.id} item={item} />
           ))}
         </div>
@@ -243,12 +283,16 @@ export const HomePage: React.FC = () => {
       <Section id="learn" ariaLabel="What you will learn curriculum">
         <div className="mb-10 md:mb-14">
           <h2 className="specimen-h2 text-[#171412]">
-            <span className="block">What you&apos;ll learn.</span>
-            <span className="block text-[#813502] mt-1">Our ways to move fast.</span>
+            <span className="block">
+              {t('আপনি যা যা শিখবেন।', "What you'll learn.")}
+            </span>
+            <span className="block text-[#813502] mt-1">
+              {t('দ্রুত এগিয়ে যাওয়ার কৌশল।', 'Our ways to move fast.')}
+            </span>
           </h2>
         </div>
 
-        <Tabs items={CURRICULUM_TABS} />
+        <Tabs items={curriculumTabs} />
       </Section>
 
       {/* =====================================================================
@@ -258,27 +302,31 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 md:mb-16">
           <div>
             <h2 className="specimen-h2 text-[#171412]">
-              Trusted by future store owners
+              {t(
+                'ভবিষ্যৎ স্টোর উদ্যোক্তাদের আস্থা',
+                'Trusted by future store owners'
+              )}
             </h2>
             <p className="mt-4 text-[16px] md:text-[18px] text-[#171412] max-w-[54ch]">
-              Early beta readers who tested our product validation scorecards and
-              storefront wireframes.
+              {t(
+                'যারা আমাদের প্রোডাক্ট ভ্যালিডেশন স্কোরকার্ড এবং স্টোরফ্রন্ট ওয়্যারফ্রেম আগেভাগে ব্যবহার করে দেখেছেন।',
+                'Early beta readers who tested our product validation scorecards and storefront wireframes.'
+              )}
             </p>
           </div>
 
           {PLACEHOLDER_CONTENT && (
             <span className="text-[13px] font-bold text-[#813502]">
-              Sample Beta Previews · Replaceable in src/config/content.ts
+              {t('বেটা প্রিভিউ মতামত', 'Sample Beta Previews')}
             </span>
           )}
         </div>
 
-        {/* Mobile Horizontal Scroll-Snap Carousel / Desktop Fanned 4-Col Row */}
         <div
           aria-label="Beta reader feedback cards"
           className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory no-scrollbar py-4 md:py-8 px-1"
         >
-          {TESTIMONIALS.map((item) => (
+          {testimonials.map((item) => (
             <TestimonialCard key={item.id} item={item} />
           ))}
         </div>
@@ -291,19 +339,24 @@ export const HomePage: React.FC = () => {
         <div className="grid-24 gap-y-10">
           <div className="col-span-24 lg:col-span-9">
             <div className="text-[13px] font-bold text-[#813502] mb-3">
-              Common Questions
+              {t('সাধারণ জিজ্ঞাসা', 'Common Questions')}
             </div>
-            <h2 className="font-display text-[44px] sm:text-[56px] font-extrabold text-[#171412] leading-[0.88] tracking-[-0.04em] text-balance">
-              Everything you need to know before joining.
+            <h2 className="font-display text-[38px] sm:text-[52px] font-extrabold text-[#171412] leading-[1.02] tracking-[-0.03em] text-balance">
+              {t(
+                'যুক্ত হওয়ার আগে যা জানা প্রয়োজন।',
+                'Everything you need to know before joining.'
+              )}
             </h2>
-            <p className="mt-4 text-[16px] text-[#171412]/85 leading-[1.4] max-w-[38ch]">
-              Have a specific question about capital requirements, time commitment, or
-              international suppliers? Read our straightforward answers.
+            <p className="mt-4 text-[16px] text-[#171412]/85 leading-[1.45] max-w-[38ch]">
+              {t(
+                'প্রাথমিক মূলধন, সময় বা আন্তর্জাতিক সাপ্লায়ার নিয়ে আপনার মনে কোনো প্রশ্ন থাকলে নিচের উত্তরগুলো দেখুন।',
+                'Have a specific question about capital requirements, time commitment, or international suppliers? Read our straightforward answers.'
+              )}
             </p>
           </div>
 
           <div className="col-span-24 lg:col-start-11 lg:col-span-14">
-            <Accordion items={FAQ_ITEMS} />
+            <Accordion items={faqItems} />
           </div>
         </div>
       </Section>
@@ -316,16 +369,16 @@ export const HomePage: React.FC = () => {
           {/* Giant Full-Width Headline */}
           <div className="text-center">
             <div className="text-[13px] font-bold text-[#813502] mb-3">
-              Operators Teaching Operators
+              {t('অভিজ্ঞ অপারেটরদের সরাসরি গাইডলাইন', 'Operators Teaching Operators')}
             </div>
-            <h2 className="font-display text-[54px] sm:text-[82px] lg:text-[116px] font-extrabold text-[#171412] leading-[0.82] tracking-[-0.05em] uppercase select-none">
+            <h2 className="font-display text-[48px] sm:text-[76px] lg:text-[108px] font-extrabold text-[#171412] leading-[0.9] tracking-[-0.04em] uppercase select-none">
               {founderStory.headline}
             </h2>
           </div>
 
           {/* Founder Photos Overlapping the Headline in Tilted Frames */}
           {foundersList.length > 0 && (
-            <div className="mt-6 sm:-mt-6 lg:-mt-12 relative z-10 flex flex-wrap items-center justify-center gap-10 sm:gap-12 lg:gap-20">
+            <div className="mt-6 sm:-mt-4 lg:-mt-10 relative z-10 flex flex-wrap items-center justify-center gap-10 sm:gap-12 lg:gap-20">
               {foundersList.map((founder, idx) => {
                 const imageFailed = Boolean(failedImages[founder.id]);
                 return (
@@ -371,10 +424,10 @@ export const HomePage: React.FC = () => {
                     {/* Name + Role Pill Chip Under Photo */}
                     <div className="mt-4 px-5 py-2.5 rounded-[50px] bg-[#171412] text-[#fbf9ef] text-center border border-[#171412] shadow-sm">
                       <div className="font-display text-[15px] font-extrabold leading-tight">
-                        {founder.name}
+                        {lang === 'en' && founder.nameEn ? founder.nameEn : founder.name}
                       </div>
                       <div className="text-[12px] text-[#fbc59d] mt-0.5">
-                        {founder.role}
+                        {lang === 'en' && founder.roleEn ? founder.roleEn : founder.role}
                       </div>
                     </div>
                   </div>
@@ -385,10 +438,10 @@ export const HomePage: React.FC = () => {
 
           {/* Founder Story Paragraph + "Meet the team" CTA */}
           <div className="mt-12 md:mt-16 max-w-3xl mx-auto text-center">
-            <p className="font-display text-[22px] sm:text-[26px] font-extrabold text-[#171412] leading-[1.15] tracking-[-0.02em]">
+            <p className="font-display text-[22px] sm:text-[26px] font-extrabold text-[#171412] leading-[1.25] tracking-[-0.02em]">
               {founderStory.lead}
             </p>
-            <p className="mt-4 text-[16px] text-[#171412]/90 leading-[1.45]">
+            <p className="mt-4 text-[16px] text-[#171412]/90 leading-[1.5]">
               {founderStory.body}
             </p>
 
@@ -400,11 +453,13 @@ export const HomePage: React.FC = () => {
                   aria-expanded={showTeamBios}
                   aria-controls="founder-bios-drawer"
                 >
-                  {showTeamBios ? 'Hide founder bios' : founderStory.ctaLabel}
+                  {showTeamBios
+                    ? t('পরিচিতি সংক্ষিপ্ত করুন', 'Hide founder bios')
+                    : founderStory.ctaLabel}
                 </Button>
               )}
               <Button variant="primary" onClick={() => navigate('/join')}>
-                Join the waitlist
+                {t('ওয়েটলিস্টে যুক্ত হোন', 'Join the waitlist')}
               </Button>
             </div>
 
@@ -420,16 +475,20 @@ export const HomePage: React.FC = () => {
                     className="rounded-[12px] bg-[#f2f0e7] border-2 border-[#171412] p-6"
                   >
                     <div className="text-[12px] font-bold text-[#813502]">
-                      {founder.specialty}
+                      {lang === 'en' && founder.specialtyEn
+                        ? founder.specialtyEn
+                        : founder.specialty}
                     </div>
                     <h3 className="font-display text-[22px] font-extrabold text-[#171412] mt-1">
-                      {founder.name}
+                      {lang === 'en' && founder.nameEn ? founder.nameEn : founder.name}
                     </h3>
                     <p className="text-[14px] text-[#171412]/80 mt-0.5 mb-3">
-                      {founder.role}
+                      {lang === 'en' && founder.roleEn ? founder.roleEn : founder.role}
                     </p>
-                    <p className="text-[15px] text-[#171412] leading-[1.4]">
-                      {founder.shortBio}
+                    <p className="text-[15px] text-[#171412] leading-[1.45]">
+                      {lang === 'en' && founder.shortBioEn
+                        ? founder.shortBioEn
+                        : founder.shortBio}
                     </p>
                   </div>
                 ))}
@@ -451,14 +510,22 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
             <div className="max-w-3xl">
               <div className="text-[13px] font-bold text-[#ffc765] mb-4">
-                Next Cohort Enrollment · Limited Waitlist Spots
+                {t(
+                  'পরবর্তী ব্যাচে ভর্তি · সীমিত ওয়েটলিস্ট আসন',
+                  'Next Cohort Enrollment · Limited Waitlist Spots'
+                )}
               </div>
               <h2 className="specimen-h2 text-[#fbf9ef]">
-                Make every day pay for itself!
+                {t(
+                  'প্রতিটি দিনকে লাভজনক করে তুলুন!',
+                  'Make every day pay for itself!'
+                )}
               </h2>
-              <p className="mt-6 text-[17px] md:text-[19px] text-[#fbf9ef]/85 leading-[1.35] max-w-[50ch]">
-                Reserve your spot on the waitlist in under two minutes. Verify your
-                email and get notified on WhatsApp and email the moment doors open.
+              <p className="mt-6 text-[17px] md:text-[19px] text-[#fbf9ef]/85 leading-[1.4] max-w-[50ch]">
+                {t(
+                  'মাত্র ২ মিনিটে ওয়েটলিস্টে আপনার স্থান নিশ্চিত করুন। ইমেইল ভেরিফাই করুন এবং নতুন ব্যাচ শুরু হওয়ার সাথে সাথে হোয়াটসঅ্যাপ ও ইমেইলে আপডেট পান।',
+                  'Reserve your spot on the waitlist in under two minutes. Verify your email and get notified on WhatsApp and email the moment doors open.'
+                )}
               </p>
 
               <div className="mt-8">
@@ -467,7 +534,7 @@ export const HomePage: React.FC = () => {
                   size="lg"
                   onClick={() => navigate('/join')}
                 >
-                  <span>Join the waitlist</span>
+                  <span>{t('ওয়েটলিস্টে যুক্ত হোন', 'Join the waitlist')}</span>
                   <ArrowRightSvgIcon className="w-4 h-4" />
                 </Button>
               </div>

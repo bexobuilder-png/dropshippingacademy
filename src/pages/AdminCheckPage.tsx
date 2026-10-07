@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import type { FounderProfile } from '../config/founders';
 import {
+  ALLOWED_ADMIN_EMAILS,
   compressImageFileToDataUrl,
   createFounder,
   deleteWaitlistEntry,
@@ -73,6 +75,8 @@ function formatDateTime(iso: string): string {
 }
 
 export const AdminCheckPage: React.FC = () => {
+  const { t } = useLanguage();
+
   // Authentication state
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
@@ -447,7 +451,7 @@ export const AdminCheckPage: React.FC = () => {
       <main id="main-content" className="py-24 text-center">
         <div className="specimen-container">
           <p className="font-display text-[20px] font-bold text-[#171412]">
-            Checking admin session...
+            {t('অ্যাডমিন সেশন যাচাই করা হচ্ছে...', 'Checking admin session...')}
           </p>
         </div>
       </main>
@@ -463,20 +467,28 @@ export const AdminCheckPage: React.FC = () => {
         <div className="specimen-container max-w-xl">
           <div className="rounded-[12px] bg-[#f2f0e7] border-2 border-[#171412] p-6 sm:p-10">
             <div className="flex items-center justify-between gap-2 text-[12px] font-bold text-[#813502] mb-3">
-              <span>Restricted Access · /check</span>
-              <span className="tabular-nums">Step {loginStep} of 2</span>
+              <span>{t('সংরক্ষিত অ্যাক্সেস · /check', 'Restricted Access · /check')}</span>
+              <span className="tabular-nums">
+                {t(`ধাপ ${loginStep} / ২`, `Step ${loginStep} of 2`)}
+              </span>
             </div>
 
-            <h1 className="font-display text-[36px] sm:text-[44px] font-extrabold text-[#171412] leading-[0.92] tracking-[-0.04em] mb-3">
-              Admin Control Center
+            <h1 className="font-display text-[34px] sm:text-[44px] font-extrabold text-[#171412] leading-[0.95] tracking-[-0.03em] mb-3">
+              {t('অ্যাডমিন কন্ট্রোল সেন্টার', 'Admin Control Center')}
             </h1>
 
-            <p className="text-[15px] text-[#171412]/85 leading-[1.4] mb-6">
+            <p className="text-[15px] text-[#171412]/85 leading-[1.45] mb-6">
               {loginStep === 1
-                ? 'Sign in with your admin email address. We will send a 6-digit one-time verification code to authenticate your session.'
-                : `Enter the 6-digit verification code sent to ${maskEmailAddress(
-                    emailInput
-                  )}.`}
+                ? t(
+                    'অনুমোদিত অ্যাডমিন ইমেইল দিয়ে লগইন করুন। আপনার সেশন যাচাই করতে ইমেইলে একটি ৬-ডিজিটের ওয়ান-টাইম কোড পাঠানো হবে।',
+                    'Sign in with your authorized admin email address. We will send a 6-digit one-time verification code to authenticate your session.'
+                  )
+                : t(
+                    `${maskEmailAddress(emailInput)} ঠিকানায় পাঠানো ৬-ডিজিটের ভেরিফিকেশন কোডটি লিখুন।`,
+                    `Enter the 6-digit verification code sent to ${maskEmailAddress(
+                      emailInput
+                    )}.`
+                  )}
             </p>
 
             {!isSupabaseConfigured && (
@@ -484,8 +496,11 @@ export const AdminCheckPage: React.FC = () => {
                 role="status"
                 className="mb-6 p-3.5 rounded-[10px] bg-[#ffc765]/40 border border-[#171412]/25 text-[13px] text-[#171412]"
               >
-                <strong>Preview Mode:</strong> Enter any admin email and any 6-digit code
-                (e.g. <strong>123456</strong>) to test the Admin Control Center.
+                <strong>Preview Mode:</strong>{' '}
+                {t(
+                  'অনুমোদিত অ্যাডমিন ইমেইল এবং যেকোনো ৬-ডিজিটের কোড (যেমন: 123456) দিয়ে কন্ট্রোল সেন্টার টেস্ট করুন।',
+                  'Select an authorized admin email and enter any 6-digit code (e.g. 123456) to test the Admin Control Center.'
+                )}
               </div>
             )}
 
@@ -515,12 +530,12 @@ export const AdminCheckPage: React.FC = () => {
               <form onSubmit={handleSendAdminOtp} noValidate className="flex flex-col gap-5">
                 <Input
                   id="admin-email"
-                  label="Admin email address"
+                  label={t('অ্যাডমিন ইমেইল ঠিকানা', 'Admin email address')}
                   type="email"
                   inputMode="email"
                   autoComplete="email"
                   required
-                  placeholder="admin@dropshippingacademy.io"
+                  placeholder="bexobuilder@gmail.com"
                   value={emailInput}
                   onChange={(e) => {
                     setEmailInput(e.target.value);
@@ -528,15 +543,46 @@ export const AdminCheckPage: React.FC = () => {
                   }}
                 />
 
+                {/* Authorized Admin Quick Select */}
+                <div className="p-3.5 rounded-[10px] bg-[#fbf9ef] border border-[#171412]/20">
+                  <div className="text-[12px] font-bold text-[#813502] mb-2">
+                    {t(
+                      'অনুমোদিত অ্যাডমিন অ্যাকাউন্টসমূহ (ক্লিক করে সিলেক্ট করুন):',
+                      'Authorized Admin Accounts (click to fill):'
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {ALLOWED_ADMIN_EMAILS.map((allowedEmail) => (
+                      <button
+                        key={allowedEmail}
+                        type="button"
+                        onClick={() => {
+                          setEmailInput(allowedEmail);
+                          if (authError) setAuthError('');
+                        }}
+                        className={`px-3 py-1.5 rounded-[50px] text-[12px] font-bold border transition-colors cursor-pointer ${
+                          emailInput.trim().toLowerCase() === allowedEmail
+                            ? 'bg-[#171412] text-[#fbf9ef] border-[#171412]'
+                            : 'bg-[#f2f0e7] text-[#171412] border-[#171412]/30 hover:bg-[#ffc765]'
+                        }`}
+                      >
+                        {allowedEmail}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <Button
                   type="submit"
                   variant="primary"
                   size="lg"
                   isLoading={isSendingOtp}
-                  loadingText="Sending code..."
+                  loadingText={t('কোড পাঠানো হচ্ছে...', 'Sending code...')}
                   className="w-full"
                 >
-                  <span>Send 6-digit login code</span>
+                  <span>
+                    {t('৬-ডিজিটের লগইন কোড পাঠান', 'Send 6-digit login code')}
+                  </span>
                   <ArrowRightSvgIcon className="w-4 h-4" />
                 </Button>
               </form>
@@ -557,9 +603,11 @@ export const AdminCheckPage: React.FC = () => {
                     variant="orange"
                     size="lg"
                     isLoading={isVerifyingOtp}
-                    loadingText="Verifying..."
+                    loadingText={t('যাচাই করা হচ্ছে...', 'Verifying...')}
                   >
-                    <span>Verify &amp; Open Dashboard</span>
+                    <span>
+                      {t('ভেরিফাই ও ড্যাশবোর্ড খুলুন', 'Verify & Open Dashboard')}
+                    </span>
                     <ArrowRightSvgIcon className="w-4 h-4" />
                   </Button>
 
@@ -570,9 +618,14 @@ export const AdminCheckPage: React.FC = () => {
                     onClick={handleResendAdminOtp}
                   >
                     {resendCooldown > 0 ? (
-                      <span className="tabular-nums">Resend in {resendCooldown}s</span>
+                      <span className="tabular-nums">
+                        {t(
+                          `পুনরায় পাঠান (${resendCooldown}s)`,
+                          `Resend in ${resendCooldown}s`
+                        )}
+                      </span>
                     ) : (
-                      <span>Resend code</span>
+                      <span>{t('পুনরায় কোড পাঠান', 'Resend code')}</span>
                     )}
                   </Button>
                 </div>
@@ -587,7 +640,7 @@ export const AdminCheckPage: React.FC = () => {
                     }}
                     className="text-[13px] font-bold text-[#813502] underline underline-offset-4 hover:text-[#171412] cursor-pointer"
                   >
-                    Use a different email address
+                    {t('অন্য অ্যাডমিন ইমেইল ব্যবহার করুন', 'Use a different email address')}
                   </button>
                 </div>
               </form>
@@ -608,26 +661,34 @@ export const AdminCheckPage: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 hairline-b mb-8">
           <div>
             <div className="flex flex-wrap items-center gap-2 text-[13px] font-bold text-[#813502] mb-1">
-              <span>Admin Control Center</span>
+              <span>{t('অ্যাডমিন কন্ট্রোল সেন্টার', 'Admin Control Center')}</span>
               <span aria-hidden="true">·</span>
-              <span>Signed in as {adminEmail}</span>
+              <span>
+                {t(`লগইনকৃত: ${adminEmail}`, `Signed in as ${adminEmail}`)}
+              </span>
             </div>
-            <h1 className="font-display text-[32px] sm:text-[44px] font-extrabold text-[#171412] leading-[0.92] tracking-[-0.04em]">
-              Waitlist &amp; Founders Management
+            <h1 className="font-display text-[32px] sm:text-[44px] font-extrabold text-[#171412] leading-[0.95] tracking-[-0.03em]">
+              {t(
+                'ওয়েটলিস্ট ও প্রতিষ্ঠাতা ব্যবস্থাপনা',
+                'Waitlist & Founders Management'
+              )}
             </h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="outline" onClick={loadDashboardData}>
-              Refresh Data
+              {t('তথ্য রিফ্রেশ করুন', 'Refresh Data')}
             </Button>
             {activeTab === 'waitlist' && waitlistRows.length > 0 && (
               <Button variant="orange" onClick={handleExportCsv}>
-                Export CSV ({waitlistRows.length})
+                {t(
+                  `CSV ডাউনলোড (${waitlistRows.length})`,
+                  `Export CSV (${waitlistRows.length})`
+                )}
               </Button>
             )}
             <Button variant="primary" onClick={handleSignOut}>
-              Sign out
+              {t('লগ আউট', 'Sign out')}
             </Button>
           </div>
         </div>
@@ -649,7 +710,10 @@ export const AdminCheckPage: React.FC = () => {
                 : 'text-[#171412] hover:bg-[#ebe9df]'
             }`}
           >
-            Waitlist Users ({waitlistRows.length})
+            {t(
+              `ওয়েটলিস্ট ব্যবহারকারী (${waitlistRows.length})`,
+              `Waitlist Users (${waitlistRows.length})`
+            )}
           </button>
 
           <button
@@ -663,7 +727,10 @@ export const AdminCheckPage: React.FC = () => {
                 : 'text-[#171412] hover:bg-[#ebe9df]'
             }`}
           >
-            Founders Control Center ({founders.length})
+            {t(
+              `প্রতিষ্ঠাতা কন্ট্রোল সেন্টার (${founders.length})`,
+              `Founders Control Center (${founders.length})`
+            )}
           </button>
         </div>
 

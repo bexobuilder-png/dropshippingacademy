@@ -19,8 +19,8 @@
   --ease-primary: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-secondary: cubic-bezier(0.36, 0.33, 0, 1);
 
-  --font-display: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: "Instrument Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Bricolage Grotesque", "Noto Sans Bengali", "Hind Siliguri", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: "Instrument Sans", "Hind Siliguri", "Noto Sans Bengali", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 @layer base {
@@ -30,7 +30,7 @@
     font-family: var(--font-body);
     font-weight: 500;
     font-size: 16px;
-    line-height: 1.25;
+    line-height: 1.35;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -63,27 +63,27 @@
 .specimen-h1 {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(52px, 9vw, 118px);
-  line-height: 0.84;
-  letter-spacing: -0.05em;
+  font-size: clamp(44px, 8vw, 108px);
+  line-height: 0.96;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
 .specimen-h2 {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(48px, 8.2vw, 112px);
-  line-height: 0.85;
-  letter-spacing: -0.05em;
+  font-size: clamp(40px, 7.2vw, 98px);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
 .specimen-h3 {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 26px;
-  line-height: 0.92;
-  letter-spacing: -0.03em;
+  font-size: 25px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 /* Swiss 24-column macro-grid helper */

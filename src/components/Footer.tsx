@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { BrandBadgeMark } from './svg/BrandLogo';
 import {
   SocialIconInstagram,
@@ -9,6 +10,7 @@ import {
 } from './svg/NavIcons';
 
 export const Footer: React.FC = () => {
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -19,11 +21,14 @@ export const Footer: React.FC = () => {
           <Link to="/" className="inline-flex items-center gap-3.5 group">
             <BrandBadgeMark className="w-11 h-11" decorative={true} />
             <div>
-              <div className="font-display text-[20px] font-extrabold tracking-[-0.03em] text-[#171412]">
-                Dropshipping Academy
+              <div className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-[#171412]">
+                {t('ড্রপশিপিং একাডেমি', 'Dropshipping Academy')}
               </div>
               <p className="text-[13px] text-[#171412]/80 mt-0.5">
-                Practical e-commerce unit economics, store architecture & paid social.
+                {t(
+                  'বাস্তবসম্মত ই-কমার্স ইউনিট ইকোনমিক্স, স্টোর ডিজাইন এবং পেইড সোশ্যাল অ্যাডস।',
+                  'Practical e-commerce unit economics, store architecture & paid social.'
+                )}
               </p>
             </div>
           </Link>
@@ -37,32 +42,37 @@ export const Footer: React.FC = () => {
               to="/join"
               className="min-h-[44px] inline-flex items-center hover:underline underline-offset-4"
             >
-              Join Waitlist
+              {t('ওয়েটলিস্টে যুক্ত হোন', 'Join Waitlist')}
             </Link>
             <Link
               to="/terms"
               className="min-h-[44px] inline-flex items-center hover:underline underline-offset-4"
             >
-              Terms
+              {t('শর্তাবলী', 'Terms')}
             </Link>
             <Link
               to="/privacy"
               className="min-h-[44px] inline-flex items-center hover:underline underline-offset-4"
             >
-              Privacy
+              {t('গোপনীয়তা নীতি', 'Privacy')}
             </Link>
             <a
               href="mailto:support@dropshippingacademy.io"
               className="min-h-[44px] inline-flex items-center hover:underline underline-offset-4"
             >
-              Contact
+              {t('যোগাযোগ', 'Contact')}
             </a>
           </nav>
         </div>
 
         {/* Bottom Row: Copyright & Hand-built SVG Social Icons */}
         <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[13px] text-[#171412]/80">
-          <p>© {currentYear} Dropshipping Academy. All rights reserved.</p>
+          <p>
+            {t(
+              `© ${currentYear} ড্রপশিপিং একাডেমি। সর্বস্বত্ব সংরক্ষিত।`,
+              `© ${currentYear} Dropshipping Academy. All rights reserved.`
+            )}
+          </p>
 
           <div className="flex items-center gap-2">
             <a

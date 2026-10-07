@@ -1,5 +1,6 @@
 import React from 'react';
 import type { TestimonialItem } from '../config/content';
+import { useLanguage } from '../context/LanguageContext';
 import { StarRatingSvg } from './svg/NavIcons';
 
 export interface TestimonialCardProps {
@@ -14,6 +15,7 @@ const ROTATION_CLASSES: Record<number, string> = {
 };
 
 export const TestimonialCard: React.FC<TestimonialCardProps> = ({ item }) => {
+  const { t } = useLanguage();
   const rotationClass = ROTATION_CLASSES[item.rotation] || 'md:rotate-0';
 
   return (
@@ -25,7 +27,9 @@ export const TestimonialCard: React.FC<TestimonialCardProps> = ({ item }) => {
         <div className="flex items-center justify-between gap-2 mb-4">
           <StarRatingSvg count={5} className="w-4 h-4" />
           <span className="text-[12px] text-[#813502] font-bold">
-            {item.isPlaceholder ? 'Preview Feedback' : item.tag}
+            {item.isPlaceholder
+              ? t('প্রিভিউ মতামত', 'Preview Feedback')
+              : item.tag}
           </span>
         </div>
 

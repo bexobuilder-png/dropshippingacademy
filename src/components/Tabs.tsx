@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import type { CurriculumTabItem } from '../config/content';
+import { useLanguage } from '../context/LanguageContext';
 import {
   TileAnalyticsIcon,
   TileBoltIcon,
@@ -14,6 +15,7 @@ export interface TabsProps {
 export const Tabs: React.FC<TabsProps> = ({ items }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const { t } = useLanguage();
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLButtonElement>) => {
     let nextIndex: number | null = null;
@@ -87,20 +89,20 @@ export const Tabs: React.FC<TabsProps> = ({ items }) => {
           {/* Left Column: Headline, Description, Deliverables */}
           <div className="lg:col-span-7 flex flex-col gap-6">
             <div className="text-[13px] font-bold text-[#ffc765] tracking-tight">
-              Stage {activeItem.stepNumber} · {activeItem.label}
+              {t('ধাপ', 'Stage')} {activeItem.stepNumber} · {activeItem.label}
             </div>
 
-            <h3 className="font-display text-[28px] sm:text-[36px] lg:text-[42px] font-extrabold text-[#fbf9ef] leading-[0.95] tracking-[-0.03em] text-balance">
+            <h3 className="font-display text-[28px] sm:text-[36px] lg:text-[42px] font-extrabold text-[#fbf9ef] leading-[1.08] tracking-[-0.02em] text-balance">
               {activeItem.headline}
             </h3>
 
-            <p className="text-[16px] text-[#fbf9ef]/90 leading-[1.4] max-w-[60ch]">
+            <p className="text-[16px] text-[#fbf9ef]/90 leading-[1.45] max-w-[60ch]">
               {activeItem.description}
             </p>
 
             <div className="pt-2 border-t border-[#fbf9ef]/15">
               <div className="text-[12px] font-bold text-[#fbc59d] mb-3">
-                Included Templates & Systems:
+                {t('অন্তর্ভুক্ত টেমপ্লেট ও সিস্টেমসমূহ:', 'Included Templates & Systems:')}
               </div>
               <ul className="flex flex-col gap-2.5">
                 {activeItem.deliverables.map((deliv) => (

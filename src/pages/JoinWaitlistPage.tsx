@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import {
   otpSchema,
@@ -39,6 +40,7 @@ const INITIAL_VALUES: WaitlistFormValues = {
 
 export const JoinWaitlistPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState<WaitlistFormValues>(() => {
@@ -70,12 +72,10 @@ export const JoinWaitlistPage: React.FC = () => {
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(60);
 
-  // Persist form draft to sessionStorage whenever formData changes
   useEffect(() => {
     saveWaitlistDraft(formData);
   }, [formData]);
 
-  // Sync WhatsApp when "Same as phone number" is checked
   useEffect(() => {
     if (formData.sameAsPhone && formData.whatsapp !== formData.phone) {
       setFormData((prev) => ({
@@ -85,7 +85,6 @@ export const JoinWaitlistPage: React.FC = () => {
     }
   }, [formData.sameAsPhone, formData.phone]);
 
-  // 60-second countdown timer on Step 2
   useEffect(() => {
     if (step !== 2 || resendCooldown <= 0) return;
     const timer = setInterval(() => {
@@ -144,7 +143,11 @@ export const JoinWaitlistPage: React.FC = () => {
 
     if (!result.success) {
       setStep1GlobalError(
-        result.error || 'Could not send verification code. Please try again.'
+        result.error ||
+          t(
+            'ভেরিফিকেশন কোড পাঠানো সম্ভব হয়নি। আবার চেষ্টা করুন।',
+            'Could not send verification code. Please try again.'
+          )
       );
       return;
     }
@@ -169,8 +172,10 @@ export const JoinWaitlistPage: React.FC = () => {
     const parsedOtp = otpSchema.safeParse({ token: otpToken });
     if (!parsedOtp.success) {
       setOtpError(
-        parsedOtp.error.issues[0]?.message ||
-          'Please enter the 6-digit verification code.'
+        t(
+          'অনুগ্রহ করে আপনার ইমেইলে পাঠানো ৬-ডিজিটের কোডটি লিখুন।',
+          'Please enter all 6 digits of your verification code.'
+        )
       );
       return;
     }
@@ -185,7 +190,10 @@ export const JoinWaitlistPage: React.FC = () => {
     if (!result.success) {
       setOtpError(
         result.error ||
-          'Invalid or expired code. Please check your email and try again.'
+          t(
+            'ভুল বা মেয়াদোত্তীর্ণ কোড। অনুগ্রহ করে আবার যাচাই করুন।',
+            'Invalid or expired code. Please check your email and try again.'
+          )
       );
       return;
     }
@@ -213,13 +221,22 @@ export const JoinWaitlistPage: React.FC = () => {
 
     if (!result.success) {
       setOtpError(
-        result.error || 'Unable to resend code right now. Please wait a moment.'
+        result.error ||
+          t(
+            'এই মুহূর্তে কোডটি পুনরায় পাঠানো যাচ্ছে না। কিছুক্ষণ পর চেষ্টা করুন।',
+            'Unable to resend code right now. Please wait a moment.'
+          )
       );
       return;
     }
 
     setResendCooldown(60);
-    setOtpStatusMsg('A fresh 6-digit verification code has been sent to your email.');
+    setOtpStatusMsg(
+      t(
+        'আপনার ইমেইলে নতুন একটি ৬-ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে।',
+        'A fresh 6-digit verification code has been sent to your email.'
+      )
+    );
   };
 
   return (
@@ -228,19 +245,18 @@ export const JoinWaitlistPage: React.FC = () => {
         {/* Progress Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between gap-4 text-[13px] font-bold text-[#813502] mb-3">
-            <span>Waitlist Application</span>
+            <span>{t('ওয়েটলিস্ট নিবন্ধন', 'Waitlist Application')}</span>
             <span aria-live="polite" className="tabular-nums">
-              Step {step} of 2
+              {t(`ধাপ ${step} / ২`, `Step ${step} of 2`)}
             </span>
           </div>
 
-          {/* Progress Bar */}
           <div
             role="progressbar"
             aria-valuenow={step}
             aria-valuemin={1}
             aria-valuemax={2}
-            aria-label={`Waitlist registration progress: Step ${step} of 2`}
+            aria-label={`Step ${step} of 2`}
             className="w-full h-2.5 rounded-full bg-[#ebe9df] overflow-hidden border border-[#171412]/20"
           >
             <div
@@ -255,12 +271,14 @@ export const JoinWaitlistPage: React.FC = () => {
         <div className="rounded-[12px] bg-[#f2f0e7] border-2 border-[#171412] p-6 sm:p-10">
           {step === 1 ? (
             <>
-              <h1 className="font-display text-[36px] sm:text-[48px] font-extrabold text-[#171412] leading-[0.9] tracking-[-0.04em] mb-3">
-                Join the waitlist.
+              <h1 className="font-display text-[34px] sm:text-[46px] font-extrabold text-[#171412] leading-[1.0] tracking-[-0.03em] mb-3">
+                {t('ওয়েটলিস্টে যুক্ত হোন।', 'Join the waitlist.')}
               </h1>
-              <p className="text-[16px] text-[#171412]/85 leading-[1.4] mb-8">
-                Enter your contact details below. We will send a 6-digit verification
-                code to your email to lock in your spot.
+              <p className="text-[16px] text-[#171412]/85 leading-[1.45] mb-8">
+                {t(
+                  'নিচে আপনার সঠিক তথ্য দিন। আপনার আসন নিশ্চিত করতে আমরা আপনার ইমেইলে একটি ৬-ডিজিটের ভেরিফিকেশন কোড পাঠাবো।',
+                  'Enter your contact details below. We will send a 6-digit verification code to your email to lock in your spot.'
+                )}
               </p>
 
               {step1GlobalError && (
@@ -275,7 +293,7 @@ export const JoinWaitlistPage: React.FC = () => {
               )}
 
               <form onSubmit={handleStep1Submit} noValidate className="flex flex-col gap-6">
-                {/* Hidden Honeypot Field for Anti-Bot Protection */}
+                {/* Hidden Honeypot Field */}
                 <div className="sr-only" aria-hidden="true">
                   <label htmlFor="website_url">Website URL (Leave blank)</label>
                   <input
@@ -293,10 +311,10 @@ export const JoinWaitlistPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Input
                     id="firstName"
-                    label="First name"
+                    label={t('নামের প্রথম অংশ (First Name)', 'First name')}
                     required
                     autoComplete="given-name"
-                    placeholder="e.g. Tanvir"
+                    placeholder={t('যেমন: তানভীর', 'e.g. Tanvir')}
                     value={formData.firstName}
                     onChange={(e) => updateField('firstName', e.target.value)}
                     error={fieldErrors.firstName}
@@ -304,22 +322,25 @@ export const JoinWaitlistPage: React.FC = () => {
 
                   <Input
                     id="lastName"
-                    label="Last name"
+                    label={t('নামের শেষ অংশ (Last Name)', 'Last name')}
                     required
                     autoComplete="family-name"
-                    placeholder="e.g. Hasan"
+                    placeholder={t('যেমন: হাসান', 'e.g. Hasan')}
                     value={formData.lastName}
                     onChange={(e) => updateField('lastName', e.target.value)}
                     error={fieldErrors.lastName}
                   />
                 </div>
 
-                {/* Date of Birth (Custom Accessible Popover + DD/MM/YYYY Input) */}
+                {/* Date of Birth */}
                 <DatePicker
                   id="dateOfBirth"
-                  label="Date of birth"
+                  label={t('জন্ম তারিখ (Date of Birth)', 'Date of birth')}
                   required
-                  hint="Type DD/MM/YYYY or use the calendar picker. You must be at least 18 years old."
+                  hint={t(
+                    'DD/MM/YYYY ফরম্যাটে লিখুন অথবা ক্যালেন্ডার থেকে বাছাই করুন। বয়স ন্যূনতম ১৮ বছর হতে হবে।',
+                    'Type DD/MM/YYYY or use the calendar picker. You must be at least 18 years old.'
+                  )}
                   value={formData.dateOfBirth}
                   onChange={(iso) => updateField('dateOfBirth', iso)}
                   error={fieldErrors.dateOfBirth}
@@ -328,19 +349,25 @@ export const JoinWaitlistPage: React.FC = () => {
                 {/* Phone Number */}
                 <PhoneInput
                   id="phone"
-                  label="Phone number"
+                  label={t('ফোন নম্বর (Phone Number)', 'Phone number')}
                   required
-                  hint="Select your country code and enter your mobile number."
+                  hint={t(
+                    'আপনার দেশের কোড সিলেক্ট করে সচল মোবাইল নম্বর দিন।',
+                    'Select your country code and enter your mobile number.'
+                  )}
                   value={formData.phone}
                   onChange={(e164) => updateField('phone', e164)}
                   error={fieldErrors.phone}
                 />
 
-                {/* WhatsApp Number + "Same as phone number" Checkbox */}
+                {/* WhatsApp Number */}
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-[13px] font-bold text-[#813502]">
-                      We send cohort opening alerts via WhatsApp
+                      {t(
+                        'নতুন ব্যাচের আপডেট হোয়াটসঅ্যাপে পাঠানো হবে',
+                        'We send cohort opening alerts via WhatsApp'
+                      )}
                     </span>
 
                     <label
@@ -356,13 +383,15 @@ export const JoinWaitlistPage: React.FC = () => {
                         }
                         className="w-5 h-5 rounded-[4px] accent-[#ff7722] cursor-pointer"
                       />
-                      <span>Same as phone number</span>
+                      <span>
+                        {t('ফোন নম্বরের মতোই', 'Same as phone number')}
+                      </span>
                     </label>
                   </div>
 
                   <PhoneInput
                     id="whatsapp"
-                    label="WhatsApp number"
+                    label={t('হোয়াটসঅ্যাপ নম্বর (WhatsApp Number)', 'WhatsApp number')}
                     required
                     disabled={formData.sameAsPhone}
                     value={formData.sameAsPhone ? formData.phone : formData.whatsapp}
@@ -374,12 +403,15 @@ export const JoinWaitlistPage: React.FC = () => {
                 {/* Email Address */}
                 <Input
                   id="email"
-                  label="Email address"
+                  label={t('ইমেইল ঠিকানা (Email Address)', 'Email address')}
                   type="email"
                   inputMode="email"
                   autoComplete="email"
                   required
-                  hint="We will send a 6-digit verification code to this address."
+                  hint={t(
+                    'এই ইমেইলে একটি ৬-ডিজিটের ভেরিফিকেশন কোড পাঠানো হবে।',
+                    'We will send a 6-digit verification code to this address.'
+                  )}
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => updateField('email', e.target.value)}
@@ -405,22 +437,25 @@ export const JoinWaitlistPage: React.FC = () => {
                       }
                       className="w-5 h-5 mt-0.5 rounded-[4px] accent-[#ff7722] shrink-0 cursor-pointer"
                     />
-                    <span className="text-[14px] text-[#171412] leading-[1.4]">
-                      I agree to the{' '}
+                    <span className="text-[14px] text-[#171412] leading-[1.45]">
+                      {t('আমি ', 'I agree to the ')}
                       <Link
                         to="/terms"
                         className="font-bold underline underline-offset-2 hover:text-[#813502]"
                       >
-                        Terms of Service
-                      </Link>{' '}
-                      and{' '}
+                        {t('শর্তাবলী', 'Terms of Service')}
+                      </Link>
+                      {t(' এবং ', ' and ')}
                       <Link
                         to="/privacy"
                         className="font-bold underline underline-offset-2 hover:text-[#813502]"
                       >
-                        Privacy Policy
+                        {t('গোপনীয়তা নীতিতে', 'Privacy Policy')}
                       </Link>
-                      , and consent to receive waitlist updates via email and WhatsApp.
+                      {t(
+                        ' সম্মতি জানাচ্ছি এবং ইমেইল ও হোয়াটসঅ্যাপে ওয়েটলিস্ট আপডেট পেতে রাজি আছি।',
+                        ', and consent to receive waitlist updates via email and WhatsApp.'
+                      )}
                       <span className="text-[#813502] ml-1" aria-hidden="true">
                         *
                       </span>
@@ -446,10 +481,12 @@ export const JoinWaitlistPage: React.FC = () => {
                     variant="orange"
                     size="lg"
                     isLoading={isSendingOtp}
-                    loadingText="Sending verification code..."
+                    loadingText={t('কোড পাঠানো হচ্ছে...', 'Sending verification code...')}
                     className="w-full sm:w-auto"
                   >
-                    <span>Send verification code</span>
+                    <span>
+                      {t('ভেরিফিকেশন কোড পাঠান', 'Send verification code')}
+                    </span>
                     <ArrowRightSvgIcon className="w-4 h-4" />
                   </Button>
                 </div>
@@ -460,16 +497,16 @@ export const JoinWaitlistPage: React.FC = () => {
                STEP 2: VERIFY EMAIL WITH 6-DIGIT OTP
             ================================================================= */
             <div>
-              <h1 className="font-display text-[36px] sm:text-[48px] font-extrabold text-[#171412] leading-[0.9] tracking-[-0.04em] mb-3">
-                Verify your email.
+              <h1 className="font-display text-[34px] sm:text-[46px] font-extrabold text-[#171412] leading-[1.0] tracking-[-0.03em] mb-3">
+                {t('আপনার ইমেইল ভেরিফাই করুন।', 'Verify your email.')}
               </h1>
 
-              <p className="text-[16px] text-[#171412]/90 leading-[1.4] mb-2">
-                We sent a 6-digit code to{' '}
+              <p className="text-[16px] text-[#171412]/90 leading-[1.45] mb-2">
+                {t('আমরা ৬-ডিজিটের একটি কোড পাঠিয়েছি ', 'We sent a 6-digit code to ')}
                 <strong className="font-bold text-[#171412]">
                   {maskEmailAddress(formData.email)}
                 </strong>
-                .
+                {t(' ঠিকানায়।', '.')}
               </p>
 
               <div className="mb-6">
@@ -482,7 +519,7 @@ export const JoinWaitlistPage: React.FC = () => {
                   }}
                   className="min-h-[44px] inline-flex items-center text-[13px] font-bold text-[#813502] underline underline-offset-4 hover:text-[#171412] cursor-pointer"
                 >
-                  Change email address
+                  {t('ইমেইল ঠিকানা পরিবর্তন করুন', 'Change email address')}
                 </button>
               </div>
 
@@ -491,11 +528,11 @@ export const JoinWaitlistPage: React.FC = () => {
                   role="status"
                   className="mb-6 p-4 rounded-[12px] bg-[#ffc765]/35 border border-[#171412]/30 text-[13px] text-[#171412]"
                 >
-                  <strong>Preview Mode Active:</strong> Supabase environment variables
-                  (<code className="font-mono">VITE_SUPABASE_URL</code> &amp;{' '}
-                  <code className="font-mono">VITE_SUPABASE_ANON_KEY</code>) are not yet
-                  configured. Enter any 6-digit code (e.g. <strong>123456</strong>) to
-                  complete verification.
+                  <strong>Preview Mode:</strong>{' '}
+                  {t(
+                    'যেকোনো ৬-ডিজিটের কোড (যেমন: 123456) দিয়ে ভেরিফিকেশন সম্পন্ন করুন।',
+                    'Enter any 6-digit code (e.g. 123456) to complete verification.'
+                  )}
                 </div>
               )}
 
@@ -527,9 +564,9 @@ export const JoinWaitlistPage: React.FC = () => {
                     variant="orange"
                     size="lg"
                     isLoading={isVerifying}
-                    loadingText="Verifying code..."
+                    loadingText={t('যাচাই করা হচ্ছে...', 'Verifying code...')}
                   >
-                    <span>Verify</span>
+                    <span>{t('ভেরিফাই করুন', 'Verify')}</span>
                     <ArrowRightSvgIcon className="w-4 h-4" />
                   </Button>
 
@@ -538,15 +575,18 @@ export const JoinWaitlistPage: React.FC = () => {
                     variant="outline"
                     disabled={resendCooldown > 0 || isResending}
                     isLoading={isResending}
-                    loadingText="Resending..."
+                    loadingText={t('পাঠানো হচ্ছে...', 'Resending...')}
                     onClick={handleResendCode}
                   >
                     {resendCooldown > 0 ? (
                       <span className="tabular-nums">
-                        Resend code in {resendCooldown}s
+                        {t(
+                          `পুনরায় কোড পাঠান (${resendCooldown}s)`,
+                          `Resend code in ${resendCooldown}s`
+                        )}
                       </span>
                     ) : (
-                      <span>Resend code</span>
+                      <span>{t('পুনরায় কোড পাঠান', 'Resend code')}</span>
                     )}
                   </Button>
                 </div>

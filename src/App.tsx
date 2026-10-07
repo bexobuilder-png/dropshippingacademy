@@ -8,6 +8,7 @@ import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Footer } from './components/Footer';
 import { Navigation } from './components/Navigation';
+import { LanguageProvider } from './context/LanguageContext';
 import { HomePage } from './pages/HomePage';
 
 const JoinWaitlistPage = React.lazy(() =>
@@ -46,44 +47,46 @@ function ScrollToTopOnRouteChange() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <ScrollToTopOnRouteChange />
-        {/* Accessible Skip-to-Content Link */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2.5 focus:rounded-[50px] focus:bg-[#171412] focus:text-[#fbf9ef] focus:text-[13px] focus:font-bold"
-        >
-          Skip to main content
-        </a>
+      <LanguageProvider>
+        <BrowserRouter>
+          <ScrollToTopOnRouteChange />
+          {/* Accessible Skip-to-Content Link */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2.5 focus:rounded-[50px] focus:bg-[#171412] focus:text-[#fbf9ef] focus:text-[13px] focus:font-bold"
+          >
+            Skip to main content
+          </a>
 
-        <div className="min-h-screen flex flex-col bg-[#fbf9ef] text-[#171412]">
-          <Navigation />
-          <div className="flex-1">
-            <Suspense
-              fallback={
-                <div
-                  role="status"
-                  aria-live="polite"
-                  className="py-24 text-center font-display text-[18px] font-bold text-[#171412]"
-                >
-                  Loading...
-                </div>
-              }
-            >
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/join" element={<JoinWaitlistPage />} />
-                <Route path="/waitlist-confirmed" element={<WaitlistConfirmedPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/check" element={<AdminCheckPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </Suspense>
+          <div className="min-h-screen flex flex-col bg-[#fbf9ef] text-[#171412]">
+            <Navigation />
+            <div className="flex-1">
+              <Suspense
+                fallback={
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="py-24 text-center font-display text-[18px] font-bold text-[#171412]"
+                  >
+                    লোড হচ্ছে...
+                  </div>
+                }
+              >
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/join" element={<JoinWaitlistPage />} />
+                  <Route path="/waitlist-confirmed" element={<WaitlistConfirmedPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/check" element={<AdminCheckPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </Suspense>
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 }

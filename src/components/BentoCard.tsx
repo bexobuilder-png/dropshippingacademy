@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BentoResultItem } from '../config/content';
+import { useLanguage } from '../context/LanguageContext';
 import {
   ProductBoxIllustration,
   RevenueChartIllustration,
@@ -12,6 +13,8 @@ export interface BentoCardProps {
 }
 
 export const BentoCard: React.FC<BentoCardProps> = ({ item }) => {
+  const { t } = useLanguage();
+
   if (item.type === 'testimonial') {
     return (
       <article
@@ -22,7 +25,9 @@ export const BentoCard: React.FC<BentoCardProps> = ({ item }) => {
           <div className="flex items-center justify-between gap-2 text-[12px] text-[#fbc59d] mb-4">
             <span>{item.tag}</span>
             {item.isPlaceholder && (
-              <span className="text-[#ffc765] font-bold">Sample Preview</span>
+              <span className="text-[#ffc765] font-bold">
+                {t('নমুনা প্রিভিউ', 'Sample Preview')}
+              </span>
             )}
           </div>
 

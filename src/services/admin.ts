@@ -14,6 +14,16 @@ const FOUNDERS_STORAGE_KEY = 'da_founders_custom_v1';
 const FOUNDERS_CLEARED_KEY = 'da_founders_cleared_v1';
 const FOUNDER_STORY_STORAGE_KEY = 'da_founder_story_custom_v1';
 
+export const ALLOWED_ADMIN_EMAILS = [
+  'bexobuilder@gmail.com',
+  'rohit007jsr@gmail.com',
+];
+
+export function isAllowedAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return ALLOWED_ADMIN_EMAILS.includes(email.trim().toLowerCase());
+}
+
 export interface FounderStoryConfig {
   headline: string;
   lead: string;
@@ -22,12 +32,13 @@ export interface FounderStoryConfig {
 }
 
 /**
- * Checks if an admin is currently authenticated via Supabase Auth (or preview session).
+ * Checks if an authorized admin is currently authenticated via Supabase Auth (or preview session).
  */
 export async function getAdminSessionEmail(): Promise<string | null> {
   if (!isSupabaseConfigured) {
     try {
-      return sessionStorage.getItem(ADMIN_DEMO_SESSION_KEY);
+      const saved = sessionStorage.getItem(ADMIN_DEMO_SESSION_KEY);
+      return isAllowedAdminEmail(saved) ? saved : null;
     } catch {
       return null;
     }
@@ -35,14 +46,18 @@ export async function getAdminSessionEmail(): Promise<string | null> {
 
   try {
     const { data } = await supabase.auth.getSession();
-    return data.session?.user?.email || null;
+    const sessionEmail = data.session?.user?.email?.trim().toLowerCase() || null;
+    if (sessionEmail && isAllowedAdminEmail(sessionEmail)) {
+      return sessionEmail;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
 /**
- * Sends a 6-digit OTP to the admin's email address.
+ * Sends a 6-digit OTP ONLY if the email belongs to an authorized admin.
  */
 export async function sendAdminLoginOtp(email: string): Promise<{
   success: boolean;
@@ -52,6 +67,14 @@ export async function sendAdminLoginOtp(email: string): Promise<{
   const normalized = email.trim().toLowerCase();
   if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
     return { success: false, error: 'Please enter a valid admin email address.' };
+  }
+
+  if (!isAllowedAdminEmail(normalized)) {
+    return {
+      success: false,
+      error:
+        'Access denied. Only authorized admin emails (bexobuilder@gmail.com or rohit007jsr@gmail.com) are permitted.',
+    };
   }
 
   if (!isSupabaseConfigured) {
@@ -84,7 +107,7 @@ export async function sendAdminLoginOtp(email: string): Promise<{
 }
 
 /**
- * Verifies the admin's 6-digit OTP and keeps the Supabase session active.
+ * Verifies the admin's 6-digit OTP and ensures the email is in ALLOWED_ADMIN_EMAILS.
  */
 export async function verifyAdminLoginOtp(
   email: string,
@@ -96,6 +119,13 @@ export async function verifyAdminLoginOtp(
 }> {
   const normalized = email.trim().toLowerCase();
   const cleanToken = token.trim();
+
+  if (!isAllowedAdminEmail(normalized)) {
+    return {
+      success: false,
+      error: 'Unauthorized admin email address.',
+    };
+  }
 
   if (!/^\d{6}$/.test(cleanToken)) {
     return { success: false, error: 'Please enter a valid 6-digit code.' };
@@ -130,9 +160,18 @@ export async function verifyAdminLoginOtp(
       };
     }
 
+    const verifiedEmail = (data.session.user.email || normalized).toLowerCase();
+    if (!isAllowedAdminEmail(verifiedEmail)) {
+      await supabase.auth.signOut();
+      return {
+        success: false,
+        error: 'Unauthorized admin account.',
+      };
+    }
+
     return {
       success: true,
-      adminEmail: data.session.user.email || normalized,
+      adminEmail: verifiedEmail,
     };
   } catch {
     return {

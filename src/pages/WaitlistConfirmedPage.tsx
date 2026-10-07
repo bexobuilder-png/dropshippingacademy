@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { loadConfirmedWaitlist } from '../services/waitlist';
 import { Button } from '../components/Button';
 import { SuccessIllustration } from '../components/svg/SuccessIllustration';
@@ -7,6 +8,7 @@ import { SuccessIllustration } from '../components/svg/SuccessIllustration';
 export const WaitlistConfirmedPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const confirmed = loadConfirmedWaitlist();
 
   // Route Guard: Only reachable after successful verification, otherwise redirect to "/"
@@ -34,48 +36,63 @@ export const WaitlistConfirmedPage: React.FC = () => {
               aria-live="polite"
               className="inline-block mb-5 px-4 py-2 rounded-[50px] bg-[#ffc765] text-[#171412] text-[13px] font-bold border border-[#171412]"
             >
-              You&apos;re already on the waitlist — your spot is reserved!
+              {t(
+                'আপনি ইতিমধ্যে ওয়েটলিস্টে আছেন — আপনার আসন সংরক্ষিত রয়েছে!',
+                "You're already on the waitlist — your spot is reserved!"
+              )}
             </div>
           )}
 
           {/* Big Headline */}
           <h1 className="specimen-h2 text-[#171412] mb-4">
-            You&apos;re on the waitlist.
+            {t('আপনি ওয়েটলিস্টে যুক্ত হয়েছেন।', "You're on the waitlist.")}
           </h1>
 
           <p className="font-display text-[22px] sm:text-[26px] font-extrabold text-[#813502] mb-3">
-            Welcome aboard, {confirmed.firstName}!
+            {t(
+              `স্বাগতম, ${confirmed.firstName}!`,
+              `Welcome aboard, ${confirmed.firstName}!`
+            )}
           </p>
 
           <p className="text-[17px] sm:text-[19px] text-[#171412] leading-[1.35] max-w-[46ch] mx-auto mb-10">
-            As soon as we&apos;re ready, we&apos;ll contact you soon on your email and
-            WhatsApp.
+            {t(
+              'আমাদের নতুন ব্যাচের প্রস্তুতি সম্পন্ন হওয়ার সাথে সাথেই আপনার ইমেইল এবং হোয়াটসঅ্যাপে যোগাযোগ করা হবে।',
+              "As soon as we're ready, we'll contact you soon on your email and WhatsApp."
+            )}
           </p>
 
           {/* Summary Card */}
           <div className="rounded-[12px] bg-[#fbf9ef] border-2 border-[#171412] p-6 text-left max-w-xl mx-auto mb-10">
             <div className="text-[12px] font-bold text-[#813502] pb-3 mb-4 border-b border-[#171412]/15">
-              Verified Waitlist Registration Summary
+              {t(
+                'ভেরিফাইড ওয়েটলিস্ট নিবন্ধনের সংক্ষিপ্ত বিবরণ',
+                'Verified Waitlist Registration Summary'
+              )}
             </div>
 
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[14px]">
               <div>
-                <dt className="text-[#171412]/70 text-[12px] font-medium">Applicant</dt>
+                <dt className="text-[#171412]/70 text-[12px] font-medium">
+                  {t('আবেদনকারী', 'Applicant')}
+                </dt>
                 <dd className="font-display text-[16px] font-extrabold text-[#171412] mt-0.5">
                   {confirmed.firstName} {confirmed.lastName}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-[#171412]/70 text-[12px] font-medium">Status</dt>
+                <dt className="text-[#171412]/70 text-[12px] font-medium">
+                  {t('অবস্থা (Status)', 'Status')}
+                </dt>
                 <dd className="font-display text-[16px] font-extrabold text-[#813502] mt-0.5">
-                  Verified · Pending Cohort
+                  {t('ভেরিফাইড · পরবর্তী ব্যাচ', 'Verified · Pending Cohort')}
                 </dd>
               </div>
 
               <div>
                 <dt className="text-[#171412]/70 text-[12px] font-medium">
-                  Verified Email
+                  {t('ভেরিফাইড ইমেইল', 'Verified Email')}
                 </dt>
                 <dd className="font-semibold text-[#171412] mt-0.5 break-all">
                   {confirmed.email}
@@ -84,7 +101,7 @@ export const WaitlistConfirmedPage: React.FC = () => {
 
               <div>
                 <dt className="text-[#171412]/70 text-[12px] font-medium">
-                  WhatsApp Alert Number
+                  {t('হোয়াটসঅ্যাপ নম্বর', 'WhatsApp Alert Number')}
                 </dt>
                 <dd className="font-semibold text-[#171412] tabular-nums mt-0.5">
                   {confirmed.whatsapp}
@@ -94,7 +111,7 @@ export const WaitlistConfirmedPage: React.FC = () => {
           </div>
 
           <Button variant="primary" size="lg" onClick={() => navigate('/')}>
-            Back to home
+            {t('হোমপেজে ফিরে যান', 'Back to home')}
           </Button>
         </div>
       </div>

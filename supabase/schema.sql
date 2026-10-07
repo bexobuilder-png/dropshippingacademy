@@ -1,5 +1,6 @@
 -- ============================================================================
 -- Dropshipping Academy — Complete Supabase Database Setup (Waitlist + Founders Admin)
+-- Authorized Admins: bexobuilder@gmail.com, rohit007jsr@gmail.com
 -- Paste and run this entire script in: Supabase Dashboard -> SQL Editor -> New Query
 -- ============================================================================
 
@@ -32,7 +33,7 @@ alter table public.waitlist enable row level security;
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on table public.waitlist to authenticated;
 
--- Policy: Authenticated users can insert their own waitlist entry
+-- Policy 1: Any authenticated user can INSERT their own waitlist entry
 drop policy if exists "Users can insert their own waitlist entry" on public.waitlist;
 create policy "Users can insert their own waitlist entry"
   on public.waitlist
@@ -40,31 +41,43 @@ create policy "Users can insert their own waitlist entry"
   to authenticated
   with check (auth.uid() = user_id);
 
--- Policy: Authenticated users (including Admin on /check) can view waitlist entries
+-- Policy 2: Users can SELECT their own row OR authorized admins can SELECT all rows
 drop policy if exists "Users can select their own waitlist entry" on public.waitlist;
 drop policy if exists "Authenticated users can select waitlist entries" on public.waitlist;
-create policy "Authenticated users can select waitlist entries"
+drop policy if exists "Users or admins can select waitlist entries" on public.waitlist;
+create policy "Users or admins can select waitlist entries"
   on public.waitlist
   for select
   to authenticated
-  using (true);
+  using (
+    auth.uid() = user_id
+    or lower(coalesce(auth.jwt() ->> 'email', '')) in ('bexobuilder@gmail.com', 'rohit007jsr@gmail.com')
+  );
 
--- Policy: Authenticated admin can update waitlist status
+-- Policy 3: Only authorized admins can UPDATE waitlist entries
 drop policy if exists "Authenticated users can update waitlist entries" on public.waitlist;
-create policy "Authenticated users can update waitlist entries"
+drop policy if exists "Admins can update waitlist entries" on public.waitlist;
+create policy "Admins can update waitlist entries"
   on public.waitlist
   for update
   to authenticated
-  using (true)
-  with check (true);
+  using (
+    lower(coalesce(auth.jwt() ->> 'email', '')) in ('bexobuilder@gmail.com', 'rohit007jsr@gmail.com')
+  )
+  with check (
+    lower(coalesce(auth.jwt() ->> 'email', '')) in ('bexobuilder@gmail.com', 'rohit007jsr@gmail.com')
+  );
 
--- Policy: Authenticated admin can delete waitlist entries
+-- Policy 4: Only authorized admins can DELETE waitlist entries
 drop policy if exists "Authenticated users can delete waitlist entries" on public.waitlist;
-create policy "Authenticated users can delete waitlist entries"
+drop policy if exists "Admins can delete waitlist entries" on public.waitlist;
+create policy "Admins can delete waitlist entries"
   on public.waitlist
   for delete
   to authenticated
-  using (true);
+  using (
+    lower(coalesce(auth.jwt() ->> 'email', '')) in ('bexobuilder@gmail.com', 'rohit007jsr@gmail.com')
+  );
 
 -- ============================================================================
 -- TABLE 2: public.founders (Managed from /check Admin Control Center)
@@ -88,7 +101,7 @@ alter table public.founders enable row level security;
 grant select on table public.founders to anon, authenticated;
 grant insert, update, delete on table public.founders to authenticated;
 
--- Anyone visiting the website can view founders
+-- Public visitors can view founders on the website
 drop policy if exists "Public can view founders" on public.founders;
 create policy "Public can view founders"
   on public.founders
@@ -96,11 +109,16 @@ create policy "Public can view founders"
   to anon, authenticated
   using (true);
 
--- Authenticated admin can insert, update, or delete founders
+-- Only authorized admins (bexobuilder@gmail.com & rohit007jsr@gmail.com) can insert, update, or delete founders
 drop policy if exists "Authenticated admin can manage founders" on public.founders;
-create policy "Authenticated admin can manage founders"
+drop policy if exists "Authorized admins can manage founders" on public.founders;
+create policy "Authorized admins can manage founders"
   on public.founders
   for all
   to authenticated
-  using (true)
-  with check (true);
+  using (
+    lower(coalesce(auth.jwt() ->> 'email', '')) in ('bexobuilder@gmail.com', 'rohit007jsr@gmail.com')
+  )
+  with check (
+    lower(coalesce(auth.jwt() ->> 'email', '')) in ('bexobuilder@gmail.com', 'rohit007jsr@gmail.com')
+  );
