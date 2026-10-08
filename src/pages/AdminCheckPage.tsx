@@ -31,6 +31,7 @@ import {
   AlertCircleSvgIcon,
   ArrowRightSvgIcon,
   CheckSvgIcon,
+  DownloadSvgIcon,
 } from '../components/svg/NavIcons';
 
 const BACKDROP_COLORS = [
@@ -101,6 +102,7 @@ export const AdminCheckPage: React.FC = () => {
     'all' | 'pending' | 'approved' | 'contacted'
   >('all');
   const [confirmDeleteUserId, setConfirmDeleteUserId] = useState<string | null>(null);
+  const [csvExportNotice, setCsvExportNotice] = useState('');
 
   // Founders Control Center State
   const [founders, setFounders] = useState<FounderProfile[]>([]);
@@ -281,50 +283,70 @@ export const AdminCheckPage: React.FC = () => {
     await deleteWaitlistEntry(id);
   };
 
-  const handleExportCsv = () => {
-    if (waitlistRows.length === 0) return;
+  const handleExportCsv = (scope: 'all' | 'filtered' = 'all') => {
+    const targetRows = scope === 'filtered' ? filteredWaitlist : waitlistRows;
     const headers = [
+      'Row Number',
+      'Applicant ID',
       'First Name',
       'Last Name',
-      'Email',
-      'Phone',
-      'WhatsApp',
+      'Full Name',
+      'Email Address',
+      'Phone Number',
+      'WhatsApp Number',
       'Date of Birth',
+      'Age (Years)',
       'Consent Accepted',
-      'Status',
-      'Joined At',
+      'Application Status',
+      'Supabase User ID',
+      'Joined At (ISO)',
     ];
-    const escapeCsv = (val: string | boolean) =>
+    const escapeCsv = (val: string | number | boolean | null | undefined) =>
       `"${String(val ?? '').replace(/"/g, '""')}"`;
 
     const lines = [
       headers.join(','),
-      ...waitlistRows.map((r) =>
-        [
+      ...targetRows.map((r, index) => {
+        const age = calculateAge(r.date_of_birth);
+        return [
+          escapeCsv(index + 1),
+          escapeCsv(r.id),
           escapeCsv(r.first_name),
           escapeCsv(r.last_name),
+          escapeCsv(`${r.first_name} ${r.last_name}`),
           escapeCsv(r.email),
           escapeCsv(r.phone),
           escapeCsv(r.whatsapp),
           escapeCsv(r.date_of_birth),
-          escapeCsv(r.consent_accepted),
+          escapeCsv(age !== null ? age : ''),
+          escapeCsv(r.consent_accepted ? 'Yes' : 'No'),
           escapeCsv(r.status),
+          escapeCsv(r.user_id),
           escapeCsv(r.created_at),
-        ].join(',')
-      ),
+        ].join(',');
+      }),
     ];
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    // Prepend UTF-8 BOM (\uFEFF) so Excel & Google Sheets open Bangla characters and +phone numbers cleanly
+    const csvContent = '\uFEFF' + lines.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
+    const dateStamp = new Date().toISOString().slice(0, 10);
     link.href = url;
-    link.download = `dropshipping-academy-waitlist-${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
+    link.download = `dropshipping-academy-waitlist-${scope}-${dateStamp}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    setCsvExportNotice(
+      t(
+        `${targetRows.length} জন ওয়েটলিস্ট ব্যবহারকারীর তথ্য CSV ফাইলে ডাউনলোড হয়েছে।`,
+        `Exported ${targetRows.length} waitlist record(s) to CSV for external analysis.`
+      )
+    );
+    setTimeout(() => setCsvExportNotice(''), 4500);
   };
 
   // ============================================================================
@@ -679,19 +701,47 @@ export const AdminCheckPage: React.FC = () => {
             <Button variant="outline" onClick={loadDashboardData}>
               {t('তথ্য রিফ্রেশ করুন', 'Refresh Data')}
             </Button>
-            {activeTab === 'waitlist' && waitlistRows.length > 0 && (
-              <Button variant="orange" onClick={handleExportCsv}>
+            <Button
+              variant="orange"
+              onClick={() => handleExportCsv('all')}
+              aria-label={t(
+                'সকল ওয়েটলিস্ট তথ্য CSV ফাইলে ডাউনলোড করুন',
+                'Download all waitlist data as CSV'
+              )}
+            >
+              <DownloadSvgIcon className="w-4 h-4" />
+              <span>
                 {t(
-                  `CSV ডাউনলোড (${waitlistRows.length})`,
-                  `Export CSV (${waitlistRows.length})`
+                  `সব তথ্য CSV ডাউনলোড (${waitlistRows.length})`,
+                  `Export All CSV (${waitlistRows.length})`
                 )}
-              </Button>
-            )}
+              </span>
+            </Button>
             <Button variant="primary" onClick={handleSignOut}>
               {t('লগ আউট', 'Sign out')}
             </Button>
           </div>
         </div>
+
+        {csvExportNotice && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mb-6 p-4 rounded-[12px] bg-[#ffc765]/45 border-2 border-[#171412] text-[14px] font-bold text-[#171412] flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-2.5">
+              <CheckSvgIcon className="w-5 h-5 text-[#813502] shrink-0" />
+              <span>{csvExportNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCsvExportNotice('')}
+              className="text-[12px] underline cursor-pointer"
+            >
+              {t('বন্ধ করুন', 'Dismiss')}
+            </button>
+          </div>
+        )}
 
         {/* Segmented Control Center Tabs */}
         <div
@@ -778,8 +828,8 @@ export const AdminCheckPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Search & Status Filter Bar */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6">
+            {/* Search, Status Filter & CSV Export Bar */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
               <div className="flex-1 max-w-md">
                 <label htmlFor="waitlist-search" className="sr-only">
                   Search waitlist users by name, email, phone, or WhatsApp
@@ -789,7 +839,10 @@ export const AdminCheckPage: React.FC = () => {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search name, email, phone, or WhatsApp..."
+                  placeholder={t(
+                    'নাম, ইমেইল, ফোন বা হোয়াটসঅ্যাপ দিয়ে খুঁজুন...',
+                    'Search name, email, phone, or WhatsApp...'
+                  )}
                   className="w-full min-h-[44px] px-4 py-2 rounded-[12px] bg-[#fff] border border-[#171412]/30 text-[15px] text-[#171412] placeholder:text-[#171412]/45"
                 />
               </div>
@@ -809,6 +862,36 @@ export const AdminCheckPage: React.FC = () => {
                     {st}
                   </button>
                 ))}
+
+                <button
+                  type="button"
+                  onClick={() => handleExportCsv('all')}
+                  className="min-h-[40px] px-4 py-1.5 rounded-[50px] bg-[#171412] text-[#fbf9ef] hover:bg-[#2c2623] text-[12px] font-bold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <DownloadSvgIcon className="w-3.5 h-3.5" />
+                  <span>
+                    {t(
+                      `CSV ডাউনলোড (${waitlistRows.length})`,
+                      `Download CSV (${waitlistRows.length})`
+                    )}
+                  </span>
+                </button>
+
+                {(statusFilter !== 'all' || searchQuery.trim() !== '') && (
+                  <button
+                    type="button"
+                    onClick={() => handleExportCsv('filtered')}
+                    className="min-h-[40px] px-4 py-1.5 rounded-[50px] bg-[#ffc765] text-[#171412] border border-[#171412] text-[12px] font-bold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <DownloadSvgIcon className="w-3.5 h-3.5" />
+                    <span>
+                      {t(
+                        `ফিল্টারকৃত CSV (${filteredWaitlist.length})`,
+                        `Export Filtered (${filteredWaitlist.length})`
+                      )}
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
 
